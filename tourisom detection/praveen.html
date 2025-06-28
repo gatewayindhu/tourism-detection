@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravelVision AI - Image Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #1a73e8;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 1rem;
+            font-weight: 300;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            display: flex;
+            gap: 20px;
+            padding: 0 20px;
+        }
+
+        .upload-section, .destination-insights {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            flex: 1;
+        }
+
+        .upload-section h2, .destination-insights h2 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .upload-section p, .destination-insights p {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .image-container {
+            border: 2px dashed #1a73e8;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #e8f0fe;
+            margin-bottom: 20px;
+        }
+
+        .image-container p {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            max-height: 260px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .image-container.image-loaded p {
+            display: none;
+        }
+
+        .image-container.image-loaded img {
+            display: block;
+        }
+
+        .upload-section button {
+            padding: 10px 20px;
+            background: #1a73e8;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .upload-section button:hover {
+            background: #1557b0;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-buttons button {
+            padding: 10px 20px;
+            background: #e8ecef;
+            color: #333;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .nav-buttons button:hover {
+            background: #d1d5db;
+        }
+
+        .destination-insights ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .destination-insights li {
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .destination-insights li:before {
+            content: '✔';
+            color: #1a73e8;
+            position: absolute;
+            left: 0;
+            font-size: 1.2rem;
+        }
+
+        .destination-insights h4 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .weather-icon {
+            font-size: 20px;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .upload-section, .destination-insights {
+                width: 100%;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="header">
+        <h1>TravelVision AI</h1>
+        <p>Discover destinations through the power of AI image recognition</p>
+    </div>
+
+    <div class="main-container">
+        <div class="upload-section">
+            <h2>Upload a Travel Photo</h2>
+            <p>Our AI will analyze your image and provide insights about the destination</p>
+            <div class="nav-buttons">
+                <button onclick="prevImage()">Previous</button>
+                <button onclick="nextImage()">Next</button>
+            </div>
+            <div class="image-container" id="imageContainer">
+                <p>Drag and drop a travel photo here or click to select a file</p>
+                <img src="file:///C:/Users/PAFT-PC-60/Downloads/taj.jpg" 
+                     alt="Tourism Destination" 
+                     id="tourismImage">
+            </div>
+            <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+            <button onclick="document.getElementById('imageUpload').click()">Select Image</button>
+            <button onclick="analyzeUploadedImage()" style="margin-left: 10px;">Analyze Destination</button>
+        </div>
+
+        <div class="destination-insights" id="destinationInsights">
+            <h2>Destination Insights</h2>
+            <p>Learn more about the detected destination based on our AI analysis</p>
+        </div>
+    </div>
+
+    <script>
+        const images = [
+            {
+                fileName: 'taj.jpg',
+                url: 'file:///C:/Users/PAFT-PC-60/Downloads/taj.jpg',
+                type: 'Architectural Photography',
+                subject: 'Taj Mahal',
+                elements: ['Monument', 'Reflection Pool', 'Minarets', 'Gardens'],
+                colors: ['White', 'Blue', 'Green'],
+                tourismPotential: 'Very High (Cultural Heritage Site)',
+                location: 'Agra, India',
+                description: 'A UNESCO World Heritage Site and iconic mausoleum known for its stunning Mughal architecture and symmetry.',
+                destinationInsights: {
+                    name: 'Agra',
+                    tagline: 'The city of the Taj Mahal, a symbol of eternal love.',
+                    information: 'Agra, located in Uttar Pradesh, is a historic city on the banks of the Yamuna River. It was the capital of the Mughal Empire from the 16th to 17th centuries, leaving behind a legacy of magnificent architecture, including the Taj Mahal, Agra Fort, and Fatehpur Sikri, all UNESCO World Heritage Sites.',
+                    statistics: 'Agra attracts over 8 million tourists annually, with the Taj Mahal alone drawing around 6 million visitors. The city has a population of approximately 1.58 million (as of the 2011 Census).',
+                    similarPlaces: 'Jaipur (known for its palaces and forts), Delhi (rich in Mughal history), and Fatehpur Sikri (a nearby UNESCO site).',
+                    currentWeather: '☀️ 28°C (as of March 21, 2025)',
+                    bestTimeToVisit: 'October to March, with pleasant weather and temperatures ranging from 8°C to 25°C.'
+                }
+            },
+            {
+                fileName: 'bugdha.jpg',
+                url: 'file:///C:/Users/PAFT-PC-60/Downloads/bugdha.jpg',
+                type: 'Landscape Photography',
+                subject: 'Buddha Statue',
+                elements: ['Statue', 'Hills', 'Steps', 'Greenery'],
+                colors: ['Green', 'Gray', 'Brown'],
+                tourismPotential: 'High (Spiritual Destination)',
+                location: 'Likely India or Southeast Asia',
+                description: 'A large Buddha statue set against a mountainous backdrop, ideal for spiritual tourism and cultural exploration.',
+                destinationInsights: {
+                    name: 'Sarnath (Assumed Location)',
+                    tagline: 'A major Buddhist pilgrimage site where Buddha gave his first sermon.',
+                    information: 'Sarnath, near Varanasi in Uttar Pradesh, India, is one of the four holiest Buddhist sites. It is where Gautama Buddha delivered his first sermon after attaining enlightenment. The site features ancient stupas, monasteries, and the famous Ashoka Pillar.',
+                    statistics: 'Sarnath attracts around 1.5 million tourists annually, including many Buddhist pilgrims. Varanasi, nearby, has a population of about 1.2 million (2011 Census).',
+                    similarPlaces: 'Bodh Gaya (where Buddha attained enlightenment), Lumbini (Buddha’s birthplace), and Kushinagar (where Buddha attained Parinirvana).',
+                    currentWeather: '☀️ 29°C (as of March 21, 2025)',
+                    bestTimeToVisit: 'October to March, with temperatures between 10°C and 25°C, ideal for exploring historical sites.'
+                }
+            },
+            {
+                fileName: 'i land.jpg',
+                url: 'file:///C:/Users/PAFT-PC-60/Downloads/i land.jpg',
+                type: 'Landscape Photography',
+                subject: 'Tropical Island',
+                elements: ['Beach', 'Boat', 'Cliffs', 'Ocean'],
+                colors: ['Turquoise', 'Beige', 'Green', 'Blue'],
+                tourismPotential: 'Very High (Beach Destination)',
+                location: 'Likely Thailand (e.g., Phang Nga Bay)',
+                description: 'A picturesque tropical island with clear waters and dramatic limestone cliffs, perfect for beach tourism and water activities.',
+                destinationInsights: {
+                    name: 'Phang Nga Bay, Thailand',
+                    tagline: 'A stunning bay with emerald waters and limestone karsts.',
+                    information: 'Phang Nga Bay, located in southern Thailand, is known for its dramatic limestone cliffs, emerald-green waters, and hidden lagoons. It includes James Bond Island (Koh Tapu), a popular tourist spot featured in a James Bond movie.',
+                    statistics: 'Phang Nga Bay attracts over 2 million tourists annually as part of Phuket’s tourism circuit. Phuket has a population of around 416,582 (2019 estimate).',
+                    similarPlaces: 'Krabi (known for its beaches and rock climbing), Phi Phi Islands (famous for diving), and Similan Islands (a diving paradise).',
+                    currentWeather: '☀️ 31°C (as of March 21, 2025)',
+                    bestTimeToVisit: 'November to April, with dry weather and temperatures between 25°C and 32°C, perfect for beach activities.'
+                }
+            },
+            {
+                fileName: 'paris.jpg',
+                url: 'file:///C:/Users/PAFT-PC-60/Downloads/paris.jpg',
+                type: 'Cityscape Photography',
+                subject: 'Eiffel Tower',
+                elements: ['Tower', 'River', 'Boat', 'Autumn Trees'],
+                colors: ['Blue', 'Orange', 'Brown'],
+                tourismPotential: 'Very High (Urban Tourism)',
+                location: 'Paris, France',
+                description: 'The iconic Eiffel Tower along the Seine River, a major draw for cultural and romantic tourism.',
+                destinationInsights: {
+                    name: 'Paris, France',
+                    tagline: 'The City of Lights, a global hub for art, culture, and romance.',
+                    information: 'Paris, the capital of France, is renowned for its art, history, and cuisine. Landmarks like the Eiffel Tower, Louvre Museum, and Notre-Dame Cathedral make it a top global destination. The Seine River adds to its charm with scenic boat tours.',
+                    statistics: 'Paris attracts over 19 million international tourists annually, making it one of the most visited cities in the world. Its population is around 2.1 million (2023 estimate).',
+                    similarPlaces: 'London (rich in history and culture), Rome (known for its ancient landmarks), and Barcelona (famous for its architecture and beaches).',
+                    currentWeather: '🌤️ 15°C (as of March 21, 2025)',
+                    bestTimeToVisit: 'April to June and September to November, with mild weather (10°C to 20°C) and fewer crowds.'
+                }
+            },
+            {
+                fileName: 'india gate.jpg',
+                url: 'file:///C:/Users/PAFT-PC-60/Downloads/india gate.jpg',
+                type: 'Architectural Photography',
+                subject: 'India Gate',
+                elements: ['Arch', 'People', 'Urban Setting'],
+                colors: ['White', 'Blue', 'Green'],
+                tourismPotential: 'High (Historical Monument)',
+                location: 'New Delhi, India',
+                description: 'A war memorial and national monument, attracting visitors for its historical significance and vibrant surroundings.',
+                destinationInsights: {
+                    name: 'New Delhi, India',
+                    tagline: 'The capital of India, blending history with modernity.',
+                    information: 'New Delhi, the capital of India, is known for its historical monuments, government buildings, and vibrant markets. India Gate, a war memorial, is a central landmark, often visited alongside other sites like the Red Fort and Qutub Minar.',
+                    statistics: 'New Delhi attracts over 10 million tourists annually. The city’s population is around 3.2 million (2023 estimate for the NCT of Delhi).',
+                    similarPlaces: 'Mumbai (known for its Bollywood industry), Kolkata (rich in colonial history), and Jaipur (famous for its palaces).',
+                    currentWeather: '☀️ 27°C (as of March 21, 2025)',
+                    bestTimeToVisit: 'October to March, with temperatures between 10°C and 25°C, ideal for sightseeing.'
+                }
+            },
+            {
+                fileName: 'sus.jpg',
+                url: 'file:///C:/Users/PAFT-PC-60/Downloads/sus.jpg',
+                type: 'Landscape Photography',
+                subject: 'Lakeside Village',
+                elements: ['Lake', 'Mountains', 'Village', 'Boat'],
+                colors: ['Blue', 'Green', 'White'],
+                tourismPotential: 'Very High (Scenic Destination)',
+                location: 'Likely Hallstatt, Austria',
+                description: 'A charming lakeside village with stunning mountain views, ideal for nature and cultural tourism.',
+                destinationInsights: {
+                    name: 'Hallstatt, Austria',
+                    tagline: 'A fairytale village nestled between a lake and the Alps.',
+                    information: 'Hallstatt, located in Austria’s Salzkammergut region, is a UNESCO World Heritage Site known for its picturesque setting on Lake Hallstatt, surrounded by the Dachstein Alps. It’s famous for its salt mine, the oldest in the world, and its charming architecture.',
+                    statistics: 'Hallstatt attracts around 1 million tourists annually, despite its small population of about 780 (2023 estimate).',
+                    similarPlaces: 'Cesky Krumlov (a historic town in the Czech Republic), Lake Bled (a scenic lake in Slovenia), and Annecy (a lakeside town in France).',
+                    currentWeather: '🌤️ 10°C (as of March 21, 2025)',
+                    bestTimeToVisit: 'May to September, with temperatures between 15°C and 25°C, ideal for outdoor activities and enjoying the scenery.'
+                }
+            }
+        ];
+
+        let currentImageIndex = 0;
+
+        function displayImage(index) {
+            const imageElement = document.getElementById('tourismImage');
+            const imageContainer = document.getElementById('imageContainer');
+            const destinationInsights = document.getElementById('destinationInsights');
+            const currentImage = images[index];
+
+            imageElement.src = currentImage.url;
+            imageElement.alt = currentImage.subject;
+            imageContainer.classList.add('image-loaded');
+
+            // Update Destination Insights
+            destinationInsights.innerHTML = `
+                <h2>Destination Insights</h2>
+                <p>Learn more about the detected destination based on our AI analysis</p>
+                <h4>${currentImage.destinationInsights.name}</h4>
+                <p>${currentImage.destinationInsights.tagline}</p>
+                <ul>
+                    <li><strong>Information:</strong> ${currentImage.destinationInsights.information}</li>
+                    <li><strong>Statistics:</strong> ${currentImage.destinationInsights.statistics}</li>
+                    <li><strong>Similar Places:</strong> ${currentImage.destinationInsights.similarPlaces}</li>
+                    <li><strong>Current Weather:</strong> <span class="weather-icon">${currentImage.destinationInsights.currentWeather.split(' ')[0]}</span> ${currentImage.destinationInsights.currentWeather.split(' ').slice(1).join(' ')}</li>
+                    <li><strong>Best Time to Visit:</strong> ${currentImage.destinationInsights.bestTimeToVisit}</li>
+                </ul>
+            `;
+        }
+
+        function prevImage() {
+            currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+            displayImage(currentImageIndex);
+        }
+
+        function nextImage() {
+            currentImageIndex = (currentImageIndex + 1) % images.length;
+            displayImage(currentImageIndex);
+        }
+
+        function analyzeUploadedImage() {
+            const fileInput = document.getElementById('imageUpload');
+            const imageElement = document.getElementById('tourismImage');
+            const imageContainer = document.getElementById('imageContainer');
+            const destinationInsights = document.getElementById('destinationInsights');
+
+            if (fileInput.files && fileInput.files[0]) {
+                const fileName = fileInput.files[0].name.toLowerCase();
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    imageElement.src = e.target.result;
+                    imageContainer.classList.add('image-loaded');
+
+                    // Check if the uploaded image matches any preloaded image by file name
+                    const matchedImage = images.find(image => image.fileName.toLowerCase() === fileName);
+
+                    if (matchedImage) {
+                        // Display the preloaded destination insights if there's a match
+                        destinationInsights.innerHTML = `
+                            <h2>Destination Insights</h2>
+                            <p>Learn more about the detected destination based on our AI analysis</p>
+                            <h4>${matchedImage.destinationInsights.name}</h4>
+                            <p>${matchedImage.destinationInsights.tagline}</p>
+                            <ul>
+                                <li><strong>Information:</strong> ${matchedImage.destinationInsights.information}</li>
+                                <li><strong>Statistics:</strong> ${matchedImage.destinationInsights.statistics}</li>
+                                <li><strong>Similar Places:</strong> ${matchedImage.destinationInsights.similarPlaces}</li>
+                                <li><strong>Current Weather:</strong> <span class="weather-icon">${matchedImage.destinationInsights.currentWeather.split(' ')[0]}</span> ${matchedImage.destinationInsights.currentWeather.split(' ').slice(1).join(' ')}</li>
+                                <li><strong>Best Time to Visit:</strong> ${matchedImage.destinationInsights.bestTimeToVisit}</li>
+                            </ul>
+                        `;
+                    } else {
+                        // Fallback to a generic message if no match is found
+                        destinationInsights.innerHTML = `
+                            <h2>Destination Insights</h2>
+                            <p>Learn more about the detected destination based on our AI analysis</p>
+                            <p><strong>Unidentified Destination</strong></p>
+                            <p>We couldn’t identify the destination in this image. Please try another image or explore our preloaded destinations using the navigation buttons.</p>
+                        `;
+                    }
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                displayImage(currentImageIndex);
+            }
+        }
+
+        // Initial image load
+        document.addEventListener('DOMContentLoaded', () => {
+            displayImage(currentImageIndex);
+        });
+
+        // Trigger file input click when clicking on the image container
+        document.getElementById('imageContainer').addEventListener('click', () => {
+            document.getElementById('imageUpload').click();
+        });
+    </script>
+</body>
+</html>
